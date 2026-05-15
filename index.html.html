@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CơmTuần — Đặt cơm theo ngày</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #FAF7F2;
+    --warm-white: #FFFDF9;
+    --clay: #C4673A;
+    --clay-light: #E8845A;
+    --clay-dark: #9E4F27;
+    --forest: #2D4A3E;
+    --forest-light: #3D6355;
+    --sage: #A8C5B5;
+    --sage-light: #D4E8DE;
+    --sand: #E8DDD0;
+    --sand-dark: #C9B99F;
+    --text-dark: #1A1A18;
+    --text-mid: #4A4A45;
+    --text-light: #8A8A82;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--sand);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--clay);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--forest);
+  }
+  .logo-text span { color: var(--clay); font-style: italic; }
+  .nav-badge {
+    background: var(--clay);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  /* HERO STRIP */
+  .hero-strip {
+    background: var(--forest);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .hero-strip h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .hero-strip h1 em {
+    font-style: italic;
+    color: var(--sage);
+  }
+  .hero-strip p {
+    font-size: 14px;
+    color: var(--sage-light);
+    margin-top: 6px;
+    max-width: 360px;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+  }
+  .hero-stat {
+    text-align: center;
+  }
+  .hero-stat .num {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--sage);
+  }
+  .hero-stat .lbl {
+    font-size: 12px;
+    color: var(--sage-light);
+    margin-top: 2px;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; padding: 1rem; }
+    .hero-stats { display: none; }
+  }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: .75rem;
+  }
+
+  /* WEEK SELECTOR */
+  .week-selector {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 1.5rem;
+  }
+  .day-btn {
+    background: var(--warm-white);
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius-sm);
+    padding: 10px 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+    font-family: 'Be Vietnam Pro', sans-serif;
+  }
+  .day-btn:hover { border-color: var(--clay-light); }
+  .day-btn.active {
+    background: var(--clay);
+    border-color: var(--clay);
+    color: white;
+  }
+  .day-btn .day-name { font-size: 11px; font-weight: 600; opacity: .7; }
+  .day-btn.active .day-name { opacity: .85; }
+  .day-btn .day-num { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .day-btn .day-dot {
+    width: 5px; height: 5px;
+    background: var(--sage);
+    border-radius: 50%;
+    margin: 4px auto 0;
+    display: none;
+  }
+  .day-btn.has-order .day-dot { display: block; }
+  .day-btn.active .day-dot { background: rgba(255,255,255,.6); }
+
+  /* MENU SECTION */
+  .menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .menu-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--forest);
+  }
+  .menu-header .date-text {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+
+  /* MEAL CARDS */
+  .meals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 500px) {
+    .meals-grid { grid-template-columns: 1fr; }
+  }
+
+  .meal-card {
+    background: var(--warm-white);
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .meal-card:hover { border-color: var(--clay-light); transform: translateY(-2px); }
+  .meal-card.selected {
+    border-color: var(--clay);
+    box-shadow: 0 0 0 3px rgba(196,103,58,.12);
+  }
+
+  .meal-img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    display: block;
+    background: var(--sand-dark);
+    position: relative;
+    overflow: hidden;
+  }
+  .meal-img-placeholder {
+    width: 100%;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+
+  .meal-body { padding: 12px 14px 14px; }
+  .meal-name { font-size: 14px; font-weight: 700; color: var(--forest); margin-bottom: 4px; }
+  .meal-desc { font-size: 12px; color: var(--text-light); line-height: 1.5; margin-bottom: 8px; }
+  .meal-footer { display: flex; align-items: center; justify-content: space-between; }
+  .meal-price { font-size: 15px; font-weight: 700; color: var(--clay); }
+  .meal-kcal { font-size: 11px; color: var(--text-light); background: var(--sage-light); padding: 2px 8px; border-radius: 20px; }
+
+  .meal-check {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 26px; height: 26px;
+    background: var(--clay);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .meal-card.selected .meal-check { display: flex; }
+
+  /* PERIOD SELECTOR */
+  .period-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+  .period-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius-sm);
+    background: var(--warm-white);
+    cursor: pointer;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-mid);
+    transition: all .15s;
+    text-align: center;
+  }
+  .period-btn:hover { border-color: var(--clay-light); }
+  .period-btn.active {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: white;
+  }
+  .period-btn .period-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+  .period-btn .period-time { font-size: 11px; opacity: .7; display: block; margin-top: 1px; }
+
+  /* NOTE INPUT */
+  .note-wrap { margin-bottom: 1.5rem; }
+  .note-wrap label { font-size: 12px; font-weight: 600; color: var(--text-mid); display: block; margin-bottom: 6px; }
+  .note-wrap textarea {
+    width: 100%;
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: var(--warm-white);
+    resize: none;
+    height: 72px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .note-wrap textarea:focus { border-color: var(--clay); }
+  .note-wrap textarea::placeholder { color: var(--text-light); }
+
+  /* SIDEBAR — ORDER SUMMARY */
+  .sidebar-card {
+    background: var(--warm-white);
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    position: sticky;
+    top: 80px;
+  }
+  .sidebar-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--forest);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .order-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-light);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .order-empty .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+  .order-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+  .order-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+  }
+  .order-item-emoji { font-size: 22px; flex-shrink: 0; }
+  .order-item-info { flex: 1; min-width: 0; }
+  .order-item-name { font-size: 13px; font-weight: 600; color: var(--forest); }
+  .order-item-day { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+  .order-item-price { font-size: 13px; font-weight: 700; color: var(--clay); flex-shrink: 0; }
+  .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    font-size: 15px;
+    padding: 2px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .remove-btn:hover { color: var(--clay); }
+
+  .order-divider { border: none; border-top: 1px solid var(--sand); margin: .75rem 0; }
+  .order-summary { font-size: 13px; color: var(--text-mid); }
+  .order-row { display: flex; justify-content: space-between; padding: 3px 0; }
+  .order-row.total { font-size: 16px; font-weight: 700; color: var(--forest); margin-top: 4px; }
+  .discount-badge {
+    font-size: 11px;
+    background: var(--sage-light);
+    color: var(--forest);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  /* ADDRESS */
+  .address-section { margin-bottom: 1rem; }
+  .address-section label { font-size: 12px; font-weight: 600; color: var(--text-mid); display: block; margin-bottom: 6px; }
+  .address-section input, .address-section select {
+    width: 100%;
+    border: 1.5px solid var(--sand);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: var(--warm-white);
+    outline: none;
+    margin-bottom: 6px;
+    transition: border-color .15s;
+  }
+  .address-section input:focus, .address-section select:focus { border-color: var(--clay); }
+
+  /* ORDER BUTTON */
+  .order-btn {
+    width: 100%;
+    background: var(--clay);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .order-btn:hover { background: var(--clay-dark); }
+  .order-btn:disabled { background: var(--sand-dark); cursor: default; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--forest);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* INFO STRIP */
+  .info-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .info-box {
+    background: var(--sage-light);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+  }
+  .info-box .i-icon { font-size: 20px; margin-bottom: 4px; }
+  .info-box .i-title { font-size: 12px; font-weight: 700; color: var(--forest); }
+  .info-box .i-sub { font-size: 11px; color: var(--forest-light); margin-top: 1px; }
+
+  /* CONFIRM MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--warm-white);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    animation: pop .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop {
+    from { transform: scale(.85); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .modal .modal-icon { font-size: 48px; margin-bottom: 12px; }
+  .modal h3 { font-size: 22px; font-weight: 700; color: var(--forest); margin-bottom: 8px; }
+  .modal p { font-size: 14px; color: var(--text-mid); line-height: 1.6; margin-bottom: 1.5rem; }
+  .modal-order-summary { background: var(--cream); border-radius: 12px; padding: 14px; margin-bottom: 1.5rem; text-align: left; font-size: 13px; }
+  .modal-order-summary .mrow { display: flex; justify-content: space-between; padding: 3px 0; color: var(--text-mid); }
+  .modal-order-summary .mrow.total { font-weight: 700; color: var(--forest); font-size: 15px; border-top: 1px solid var(--sand); margin-top: 6px; padding-top: 8px; }
+  .modal-btn-row { display: flex; gap: 10px; }
+  .modal-btn-row button { flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-family: 'Be Vietnam Pro', sans-serif; font-size: 14px; font-weight: 700; }
+  .modal-cancel { background: var(--sand); color: var(--text-mid); }
+  .modal-confirm { background: var(--clay); color: white; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🍱</div>
+    <div class="logo-text">Cơm<span>Tuần</span></div>
+  </div>
+  <div class="nav-badge" id="cart-badge">Giỏ hàng: 0 món</div>
+</nav>
+
+<div class="hero-strip">
+  <div>
+    <h1>Cơm ngon mỗi ngày,<br><em>đặt trước — giao đúng giờ</em></h1>
+    <p>Thực đơn thay đổi theo ngày. Đặt trước 8:00 sáng, nhận cơm lúc 11:30 tại ký túc xá.</p>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">35k</div><div class="lbl">Từ 35.000đ/suất</div></div>
+    <div class="hero-stat"><div class="num">11:30</div><div class="lbl">Giờ giao cố định</div></div>
+    <div class="hero-stat"><div class="num">200+</div><div class="lbl">Sinh viên đặt/tuần</div></div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- LEFT COLUMN -->
+  <div>
+    <div class="section-label">Chọn ngày đặt cơm</div>
+    <div class="week-selector" id="week-selector"></div>
+
+    <div class="info-strip">
+      <div class="info-box">
+        <div class="i-icon">⏰</div>
+        <div class="i-title">Đặt trước 8:00</div>
+        <div class="i-sub">Để kịp nấu hôm đó</div>
+      </div>
+      <div class="info-box">
+        <div class="i-icon">🏠</div>
+        <div class="i-title">Giao tận phòng</div>
+        <div class="i-sub">KTX & khu trọ gần trường</div>
+      </div>
+      <div class="info-box">
+        <div class="i-icon">🥗</div>
+        <div class="i-title">Ghi rõ calorie</div>
+        <div class="i-sub">Ăn uống có ý thức</div>
+      </div>
+    </div>
+
+    <div class="menu-header">
+      <div>
+        <div class="section-label">Thực đơn hôm nay</div>
+        <h2 id="menu-day-title">Thứ Hai</h2>
+      </div>
+      <div class="date-text" id="menu-date-text"></div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:.5rem">Buổi ăn</div>
+    <div class="period-row">
+      <button class="period-btn active" data-period="lunch" onclick="selectPeriod(this,'lunch')">
+        <span class="period-icon">☀️</span>
+        Buổi trưa
+        <span class="period-time">Giao 11:30</span>
+      </button>
+      <button class="period-btn" data-period="dinner" onclick="selectPeriod(this,'dinner')">
+        <span class="period-icon">🌙</span>
+        Buổi tối
+        <span class="period-time">Giao 17:30</span>
+      </button>
+    </div>
+
+    <div class="meals-grid" id="meals-grid"></div>
+
+    <div class="note-wrap">
+      <label>Ghi chú cho bếp (không bắt buộc)</label>
+      <textarea id="note-input" placeholder="Ví dụ: ít cay, không hành, dị ứng đậu phộng..."></textarea>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div>
+    <div class="sidebar-card">
+      <h3>🛒 Đơn hàng tuần này</h3>
+
+      <div class="address-section">
+        <label>Địa điểm nhận</label>
+        <select id="location-select">
+          <option>KTX khu A — Cổng chính</option>
+          <option>KTX khu B — Sảnh tầng 1</option>
+          <option>Khu trọ Hải Châu</option>
+          <option>Khu trọ Ngũ Hành Sơn</option>
+        </select>
+        <input type="text" id="room-input" placeholder="Số phòng / địa chỉ chi tiết">
+      </div>
+
+      <div id="order-display">
+        <div class="order-empty">
+          <div class="empty-icon">🍽️</div>
+          Chưa có suất ăn nào.<br>Chọn ngày và món để bắt đầu!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <h3>Xác nhận đặt cơm!</h3>
+    <p>Đơn hàng sẽ được gửi đến bếp ngay bây giờ. Bạn sẽ nhận thông báo khi cơm được giao.</p>
+    <div class="modal-order-summary" id="modal-summary"></div>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closeModal()">Xem lại</button>
+      <button class="modal-confirm" onclick="confirmOrder()">Đặt ngay ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = ['CN','T2','T3','T4','T5','T6','T7'];
+const DAYS_FULL = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+
+const MENU = {
+  lunch: [
+    { id:'l1', name:'Cơm gà hấp gừng', desc:'Gà ta, cơm trắng, canh rau cải, dưa leo', price:42000, kcal:620, emoji:'🍗' },
+    { id:'l2', name:'Bún bò Huế', desc:'Bún bò, giò heo, rau sống, nước lèo cay', price:38000, kcal:580, emoji:'🍜' },
+    { id:'l3', name:'Cơm sườn nướng', desc:'Sườn nướng mật ong, cơm trắng, canh bí', price:45000, kcal:680, emoji:'🥩' },
+    { id:'l4', name:'Cơm chay thập cẩm', desc:'Đậu hũ sốt, nấm, rau xào, canh rau ngót', price:35000, kcal:420, emoji:'🥦' },
+  ],
+  dinner: [
+    { id:'d1', name:'Mì Quảng tôm thịt', desc:'Mì Quảng tươi, tôm, thịt ba chỉ, rau sống', price:40000, kcal:590, emoji:'🍝' },
+    { id:'d2', name:'Cơm chiên dương châu', desc:'Cơm chiên trứng, tôm, lạp xưởng, rau', price:38000, kcal:650, emoji:'🍳' },
+    { id:'d3', name:'Phở bò tái', desc:'Phở bò tái, gân, nước dùng hầm 8 tiếng', price:42000, kcal:540, emoji:'🍲' },
+    { id:'d4', name:'Cơm lươn Đà Nẵng', desc:'Lươn um, cơm trắng, rau muống xào tỏi', price:48000, kcal:600, emoji:'🐟' },
+  ],
+};
+
+let selectedDay = null;
+let selectedPeriod = 'lunch';
+let selectedMeal = null;
+let orders = {};
+
+function getThisWeek() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+const weekDays = getThisWeek();
+
+function formatDate(d) {
+  return `${d.getDate()}/${d.getMonth()+1}`;
+}
+
+function buildWeek() {
+  const sel = document.getElementById('week-selector');
+  sel.innerHTML = '';
+  const today = new Date();
+  weekDays.forEach((d, i) => {
+    const isToday = d.toDateString() === today.toDateString();
+    const isPast = d < today && !isToday;
+    const key = d.toDateString();
+    const hasOrder = !!orders[key];
+    const btn = document.createElement('button');
+    btn.className = 'day-btn' + (isToday ? ' active' : '') + (hasOrder ? ' has-order' : '');
+    btn.disabled = isPast;
+    btn.style.opacity = isPast ? '.4' : '1';
+    btn.innerHTML = `<div class="day-name">${DAYS[(d.getDay())]}</div><div class="day-num">${d.getDate()}</div><div class="day-dot"></div>`;
+    btn.onclick = () => selectDay(d, btn);
+    sel.appendChild(btn);
+    if (isToday) selectDay(d, btn, true);
+  });
+}
+
+function selectDay(d, btn, silent) {
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDay = d;
+  selectedMeal = null;
+  const key = d.toDateString();
+  const dayOrder = orders[key];
+  document.getElementById('menu-day-title').textContent = DAYS_FULL[d.getDay()];
+  document.getElementById('menu-date-text').textContent = `Ngày ${formatDate(d)}`;
+  renderMeals();
+  if (!silent) showToast(`Đang xem thực đơn ${DAYS_FULL[d.getDay()]}`);
+}
+
+function selectPeriod(btn, period) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedPeriod = period;
+  selectedMeal = null;
+  renderMeals();
+}
+
+function renderMeals() {
+  const grid = document.getElementById('meals-grid');
+  const meals = MENU[selectedPeriod];
+  const key = selectedDay ? selectedDay.toDateString() + '_' + selectedPeriod : null;
+  const currentId = key && orders[key] ? orders[key].id : null;
+
+  grid.innerHTML = meals.map(m => `
+    <div class="meal-card${currentId === m.id ? ' selected' : ''}" onclick="selectMeal('${m.id}')">
+      <div class="meal-check">✓</div>
+      <div class="meal-img-placeholder" style="background:${getBg(m.id)}">${m.emoji}</div>
+      <div class="meal-body">
+        <div class="meal-name">${m.name}</div>
+        <div class="meal-desc">${m.desc}</div>
+        <div class="meal-footer">
+          <span class="meal-price">${m.price.toLocaleString('vi-VN')}đ</span>
+          <span class="meal-kcal">${m.kcal} kcal</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getBg(id) {
+  const bgs = { l1:'#F5E6D3', l2:'#F3E4D7', l3:'#F0E8D8', l4:'#E8F0E8', d1:'#EDE8D8', d2:'#F5EAD0', d3:'#E8EEF5', d4:'#E0EEE8' };
+  return bgs[id] || '#F0EDE8';
+}
+
+function selectMeal(id) {
+  if (!selectedDay) { showToast('Vui lòng chọn ngày trước!'); return; }
+  const meal = MENU[selectedPeriod].find(m => m.id === id);
+  const key = selectedDay.toDateString() + '_' + selectedPeriod;
+  const dayKey = selectedDay.toDateString();
+
+  if (orders[key] && orders[key].id === id) {
+    delete orders[key];
+    showToast('Đã bỏ chọn món');
+  } else {
+    orders[key] = { ...meal, period: selectedPeriod, day: selectedDay, dayKey };
+    showToast(`Đã chọn ${meal.name}!`);
+  }
+
+  renderMeals();
+  renderOrders();
+  buildWeek();
+}
+
+function renderOrders() {
+  const display = document.getElementById('order-display');
+  const list = Object.values(orders);
+  const badge = document.getElementById('cart-badge');
+
+  badge.textContent = `Giỏ hàng: ${list.length} món`;
+
+  if (list.length === 0) {
+    display.innerHTML = `<div class="order-empty"><div class="empty-icon">🍽️</div>Chưa có suất ăn nào.<br>Chọn ngày và món để bắt đầu!</div>`;
+    return;
+  }
+
+  const subtotal = list.reduce((s, o) => s + o.price, 0);
+  const ship = 0;
+  const discount = list.length >= 5 ? Math.round(subtotal * 0.05) : 0;
+  const total = subtotal - discount + ship;
+
+  display.innerHTML = `
+    <div class="order-list">
+      ${list.sort((a,b) => a.day - b.day).map(o => `
+        <div class="order-item">
+          <span class="order-item-emoji">${o.emoji}</span>
+          <div class="order-item-info">
+            <div class="order-item-name">${o.name}</div>
+            <div class="order-item-day">${DAYS_FULL[o.day.getDay()]} · ${o.period==='lunch'?'Trưa 11:30':'Tối 17:30'}</div>
+          </div>
+          <span class="order-item-price">${o.price.toLocaleString('vi-VN')}đ</span>
+          <button class="remove-btn" onclick="removeOrder('${o.day.toDateString()}_${o.period}')">×</button>
+        </div>
+      `).join('')}
+    </div>
+    <hr class="order-divider">
+    <div class="order-summary">
+      <div class="order-row"><span>Tạm tính (${list.length} suất)</span><span>${subtotal.toLocaleString('vi-VN')}đ</span></div>
+      <div class="order-row"><span>Phí giao hàng</span><span style="color:var(--forest);font-weight:600">Miễn phí</span></div>
+      ${discount > 0 ? `<div class="order-row"><span>Giảm 5% (≥5 suất) <span class="discount-badge">-5%</span></span><span style="color:var(--clay)">-${discount.toLocaleString('vi-VN')}đ</span></div>` : `<div class="order-row" style="font-size:12px;color:var(--text-light)"><span>Đặt ≥5 suất → giảm 5%</span><span>${5-list.length} suất nữa</span></div>`}
+      <div class="order-row total"><span>Tổng cộng</span><span>${total.toLocaleString('vi-VN')}đ</span></div>
+    </div>
+    <hr class="order-divider">
+    <button class="order-btn" onclick="openModal()">
+      Đặt cơm ngay 🍱
+    </button>
+  `;
+}
+
+function removeOrder(key) {
+  delete orders[key];
+  renderOrders();
+  renderMeals();
+  buildWeek();
+  showToast('Đã xoá khỏi đơn hàng');
+}
+
+function openModal() {
+  const list = Object.values(orders);
+  if (list.length === 0) { showToast('Chưa có món nào!'); return; }
+  const subtotal = list.reduce((s,o) => s+o.price, 0);
+  const discount = list.length >= 5 ? Math.round(subtotal*0.05) : 0;
+  const total = subtotal - discount;
+  const loc = document.getElementById('location-select').value;
+  const room = document.getElementById('room-input').value || 'Chưa điền';
+
+  document.getElementById('modal-summary').innerHTML = `
+    ${list.map(o => `<div class="mrow"><span>${o.emoji} ${o.name} (${DAYS_FULL[o.day.getDay()]})</span><span>${o.price.toLocaleString('vi-VN')}đ</span></div>`).join('')}
+    <div class="mrow" style="margin-top:8px;font-size:12px;color:var(--text-light)"><span>📍 ${loc}</span><span>Phòng: ${room}</span></div>
+    ${discount > 0 ? `<div class="mrow" style="color:var(--clay)"><span>Giảm giá</span><span>-${discount.toLocaleString('vi-VN')}đ</span></div>` : ''}
+    <div class="mrow total"><span>Tổng</span><span>${total.toLocaleString('vi-VN')}đ</span></div>
+  `;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function confirmOrder() {
+  closeModal();
+  orders = {};
+  renderOrders();
+  buildWeek();
+  renderMeals();
+  setTimeout(() => showToast('🎉 Đặt cơm thành công! Bếp đã nhận đơn.'), 200);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+buildWeek();
+renderOrders();
+</script>
+</body>
+</html>
